@@ -65,6 +65,14 @@ def wait_for_next_second() -> None:
     time.sleep(1 - (time.time() % 1))
 
 
+# Получить загруженность вентилятора от 0 до 100%:
+def get_fan_percent() -> str:
+    try:
+        return str(round(int(get_cmd_result("cat /sys/class/hwmon/hwmon*/pwm1"))/255*100, 1))
+    except Exception:
+        return "n/a"
+
+
 # Получить архитектуру процессора:
 def get_arch() -> str:
     return get_cmd_result("uname -m")
@@ -76,7 +84,7 @@ def get_cpu_temp() -> str:
     try:
         for i in range(5):  # 5 раз запрашиваем температуру чтобы узнать среднее значение:
             values.append(int(get_cmd_result("cat /sys/class/thermal/thermal_zone0/temp"))/1000)
-        return str(round(sum(values)/len(values), 2))
+        return str(round(sum(values)/len(values), 1))
     except Exception:
         return "n/a"
 
@@ -154,6 +162,7 @@ def main() -> None:
             cpu = get_cpu_usage()
             cpu_arch = get_arch()
             cpu_temp = get_cpu_temp()
+            fan_percent = get_fan_percent()
             cpu_freq = get_cpu_freq()
             cpu_freq_min = get_cpu_min_freq()
             cpu_freq_max = get_cpu_max_freq()
@@ -166,7 +175,7 @@ def main() -> None:
             # Выводимые тексты:
             texts = [
                 f"CPU: {round(cpu, 1)}% [{cpu_arch}]",
-                f"Temp: {cpu_temp}°C",
+                f"Tmp: {cpu_temp}°C Fan: {fan_percent}%",
                 f"Freq: {cpu_freq} GHz [{cpu_freq_min}-{cpu_freq_max}]",
                 f"RAM: {ram_percent}% [{ram_used}]",
                 f"Disk: {disk_percent}% [{disk_used}]",
